@@ -7,8 +7,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "install:all": "npm install --prefix backend && npm install --prefix factory && npm install --prefix manager && npm install --prefix sales && npm install --prefix mobile",
-    "dev:backend": "npm run dev --prefix backend",
+    "install:all": "npm install --prefix sales/backend && npm install --prefix factory && npm install --prefix manager && npm install --prefix sales && npm install --prefix mobile",
+    "dev:backend": "npm run dev --prefix sales/backend",
     "dev:factory": "npm run dev:vite --prefix factory",
     "dev:manager": "npm run dev:vite --prefix manager",
     "dev:sales": "npm run dev:vite --prefix sales",
@@ -16,10 +16,10 @@
     "build:factory": "npm run build --prefix factory",
     "build:manager": "npm run build --prefix manager",
     "build:sales": "npm run build --prefix sales",
-    "typecheck:backend": "npm run lint --prefix backend",
+    "typecheck:backend": "npm run lint --prefix sales/backend",
     "typecheck:factory": "npm run lint --prefix factory",
     "typecheck:manager": "npm run lint --prefix manager",
     "typecheck:sales": "npm run lint --prefix sales",
-    "test:backend": "npm test --prefix backend"
+    "test:backend": "npm test --prefix sales/backend"
   }
 }

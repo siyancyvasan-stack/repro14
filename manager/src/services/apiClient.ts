@@ -2,15 +2,13 @@ const configuredApiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.t
 const resolveApiUrl = () => {
   if (configuredApiUrl && configuredApiUrl !== 'same-origin') {
     if (import.meta.env.DEV && configuredApiUrl.includes('api.reproutes.com')) {
-      const hostname = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
-      return `http://${hostname}:4000`;
+      return '';
     }
     return configuredApiUrl.replace(/\/$/, '');
   }
-  if (import.meta.env.DEV) {
-    const hostname = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
-    return `http://${hostname}:4000`;
-  }
+  // In development, use Vite's same-origin proxy. This avoids hard-coding
+  // localhost in browser requests and keeps the API target configurable.
+  if (import.meta.env.DEV) return '';
   return '';
 };
 const API_URL = resolveApiUrl();
