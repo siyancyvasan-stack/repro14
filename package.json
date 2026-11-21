@@ -1,0 +1,25 @@
+{
+  "name": "reproutes-platform",
+  "version": "13.0.0",
+  "private": true,
+  "description": "Reproutes field sales, manager, factory and mobile platform",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "install:all": "npm install --prefix backend && npm install --prefix factory && npm install --prefix manager && npm install --prefix sales && npm install --prefix mobile",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:factory": "npm run dev:vite --prefix factory",
+    "dev:manager": "npm run dev:vite --prefix manager",
+    "dev:sales": "npm run dev:vite --prefix sales",
+    "dev:mobile": "npm start --prefix mobile",
+    "build:factory": "npm run build --prefix factory",
+    "build:manager": "npm run build --prefix manager",
+    "build:sales": "npm run build --prefix sales",
+    "typecheck:backend": "npm run lint --prefix backend",
+    "typecheck:factory": "npm run lint --prefix factory",
+    "typecheck:manager": "npm run lint --prefix manager",
+    "typecheck:sales": "npm run lint --prefix sales",
+    "test:backend": "npm test --prefix backend"
+  }
+}

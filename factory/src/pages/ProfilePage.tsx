@@ -1,0 +1,16 @@
+import React from 'react';
+import { Save, UserRound } from 'lucide-react';
+import { FactoryLayout } from '../components/layout/FactoryLayout';
+import { ProfileAvatar } from '../components/common/ProfileAvatar';
+import { useAuth } from '../context/AuthContext';
+import { apiRequest } from '../services/apiClient';
+import { useToast } from '../context/ToastContext';
+
+export const ProfilePage = () => {
+  const { user, updateUser } = useAuth();
+  const { showToast } = useToast();
+  const [form, setForm] = React.useState({ name: user?.name ?? '', email: user?.email ?? '', avatarUrl: user?.avatar ?? '', password: '' });
+  const [saving, setSaving] = React.useState(false);
+  const submit = async (event: React.FormEvent) => { event.preventDefault(); setSaving(true); try { const result = await apiRequest<{ user: typeof user }>('/api/v1/auth/me', { method: 'PATCH', body: JSON.stringify({ ...form, ...(form.password ? {} : { password: undefined }) }) }); if (result.user) updateUser({ ...result.user, avatar: result.user.avatarUrl ?? '' }); showToast('Profile saved', 'Your account details were updated.', 'success'); setForm((v) => ({ ...v, password: '' })); } catch (error) { showToast('Save failed', error instanceof Error ? error.message : 'Unable to save profile.', 'error'); } finally { setSaving(false); } };
+  return <FactoryLayout><div className="mx-auto max-w-2xl space-y-5"><h1 className="flex items-center gap-2 text-2xl font-extrabold text-slate-900"><UserRound className="text-indigo-600" />Factory Profile</h1><form onSubmit={submit} className="grid gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"><ProfileAvatar src={form.avatarUrl} name={form.name} className="h-20 w-20 rounded-2xl" /><label className="grid gap-1 text-sm font-bold">Name<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-xl border border-slate-200 p-3" /></label><label className="grid gap-1 text-sm font-bold">Email<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="rounded-xl border border-slate-200 p-3" /></label><label className="grid gap-1 text-sm font-bold">Avatar image URL<input type="url" value={form.avatarUrl} onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })} className="rounded-xl border border-slate-200 p-3" /></label><label className="grid gap-1 text-sm font-bold">New password<input type="password" minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Leave blank to keep current password" className="rounded-xl border border-slate-200 p-3" /></label><button disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-bold text-white disabled:opacity-50"><Save className="h-4 w-4" />{saving ? 'Saving…' : 'Save profile'}</button></form></div></FactoryLayout>;
+};
