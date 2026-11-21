@@ -73,8 +73,8 @@ module.exports = ({ config }) => ({
     tenantSlug: productionBuild ? 'reproutes' : process.env.EXPO_PUBLIC_TENANT_SLUG ?? 'reproutes-demo',
     // EAS project IDs belong to the Expo account that owns the build.
     // Do not hard-code a project from another account.
-    ...(process.env.EXPO_PUBLIC_EAS_PROJECT_ID
-      ? { eas: { projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID } }
-      : {}),
+    eas: {
+      projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID || '7de64d62-0a3e-4c11-b4c7-2b1ab119e019',
+    },
   },
 });
