@@ -4,9 +4,10 @@ import path from 'path';
 import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({ mode }) => {
-  const backendEnv = loadEnv(mode, path.resolve(__dirname, '../backend'), '');
+  // The shared API lives under sales/backend in this monorepo.
+  const backendEnv = loadEnv(mode, path.resolve(__dirname, '../sales/backend'), '');
   const port = Number(backendEnv.FACTORY_PORT || '4003');
-  const target = `http://127.0.0.1:${backendEnv.PORT || '4000'}`;
+  const target = `http://127.0.0.1:${backendEnv.PORT || '3001'}`;
   const appVersion = backendEnv.VITE_APP_VERSION || backendEnv.APP_VERSION || '';
 
   // Automatically sync package.json version with backend .env

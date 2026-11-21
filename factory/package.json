@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:vite": "vite --port=4000 --host=0.0.0.0 --strictPort",
+    "dev:vite": "vite --port=4003 --host=0.0.0.0 --strictPort",
     "build": "vite build",
     "test": "tsx --test tests/*.test.ts",
     "preview": "vite preview",

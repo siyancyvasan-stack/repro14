@@ -238,7 +238,10 @@ export const ShopCreatePage: React.FC = () => {
       // The API assigns the new shop to the signed-in salesperson. Open the
       // order flow with that persisted shop selected so it is immediately
       // available for booking without a manual refresh.
-      navigate(`/sales/new-order?shopId=${encodeURIComponent(createdShop.id)}`);
+      // Keep the success notification visible before leaving the form.
+      window.setTimeout(() => {
+        navigate(`/sales/new-order?shopId=${encodeURIComponent(createdShop.id)}`);
+      }, 1200);
     } catch (e) {
       const message =
         e instanceof ApiError && e.code === "DUPLICATE_RETAILER"
