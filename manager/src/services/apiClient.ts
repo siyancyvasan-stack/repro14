@@ -1,6 +1,9 @@
 const configuredApiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
 const resolveApiUrl = () => {
   if (configuredApiUrl && configuredApiUrl !== 'same-origin') {
+    if (import.meta.env.PROD && /localhost|127\.0\.0\.1|192\.168\./i.test(configuredApiUrl)) {
+      return 'https://api.reproutes.com';
+    }
     return configuredApiUrl.replace(/\/$/, '');
   }
   // In development, use Vite's same-origin proxy. This avoids hard-coding
