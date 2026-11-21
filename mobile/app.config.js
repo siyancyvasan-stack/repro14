@@ -71,6 +71,10 @@ module.exports = ({ config }) => ({
       ? productionWebUrl
       : process.env.EXPO_PUBLIC_WEB_URL?.trim().replace(/\/$/, '') || apiUrl.replace(/:4001$/, ':4000'),
     tenantSlug: productionBuild ? 'reproutes' : process.env.EXPO_PUBLIC_TENANT_SLUG ?? 'reproutes-demo',
-    eas: { projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID || '988acd29-cd48-462f-80c7-53f1768cc506' },
+    // EAS project IDs belong to the Expo account that owns the build.
+    // Do not hard-code a project from another account.
+    ...(process.env.EXPO_PUBLIC_EAS_PROJECT_ID
+      ? { eas: { projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID } }
+      : {}),
   },
 });
