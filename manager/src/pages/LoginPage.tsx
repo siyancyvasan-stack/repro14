@@ -70,12 +70,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ portal }) => {
     const checkConnection = async () => {
       try {
         const configuredUrl = import.meta.env.VITE_API_URL?.trim() || (import.meta.env.PROD ? 'https://api.reproutes.com' : 'same-origin');
-        const productionApiUrl = import.meta.env.PROD && /localhost|127\.0\.0\.1|192\.168\./i.test(configuredUrl)
+        const runtimeApiUrl = import.meta.env.DEV && configuredUrl.includes('api.reproutes.com')
+          ? 'same-origin'
+          : import.meta.env.PROD && /localhost|127\.0\.0\.1|192\.168\./i.test(configuredUrl)
           ? 'https://api.reproutes.com'
           : configuredUrl;
-        const apiBase = productionApiUrl === 'same-origin'
+        const apiBase = runtimeApiUrl === 'same-origin'
           ? ''
-          : productionApiUrl.replace(/\/+$/, '').replace(/\/api\/v1$/, '');
+          : runtimeApiUrl.replace(/\/+$/, '').replace(/\/api\/v1$/, '');
         const res = await fetch(`${apiBase}/health/live`, {
           signal: AbortSignal.timeout(10_000),
         });
