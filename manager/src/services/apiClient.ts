@@ -9,7 +9,9 @@ const resolveApiUrl = () => {
   // In development, use Vite's same-origin proxy. This avoids hard-coding
   // localhost in browser requests and keeps the API target configurable.
   if (import.meta.env.DEV) return '';
-  return '';
+  // Production deployments may serve the portal and API on different
+  // subdomains. Keep the API reachable even when VITE_API_URL is omitted.
+  return import.meta.env.PROD ? 'https://api.reproutes.com' : '';
 };
 const API_URL = resolveApiUrl();
 let accessToken: string | null = null;

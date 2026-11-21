@@ -69,7 +69,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ portal }) => {
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const configuredUrl = import.meta.env.VITE_API_URL?.trim() || 'same-origin';
+        const configuredUrl = import.meta.env.VITE_API_URL?.trim() || (import.meta.env.PROD ? 'https://api.reproutes.com' : 'same-origin');
         const apiBase = configuredUrl === 'same-origin' || (import.meta.env.DEV && (configuredUrl.includes('api.reproutes.com') || configuredUrl.includes('localhost:4000')))
           ? ''
           : configuredUrl.replace(/\/+$/, '').replace(/\/api\/v1$/, '');

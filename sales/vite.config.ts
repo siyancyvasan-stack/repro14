@@ -4,11 +4,12 @@ import path from 'path';
 import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({ mode }) => {
-  const backendEnv = loadEnv(mode, path.resolve(__dirname, '../backend'), '');
+  // The shared API lives under sales/backend in this monorepo.
+  const backendEnv = loadEnv(mode, path.resolve(__dirname, '../sales/backend'), '');
   const frontendEnv = loadEnv(mode, __dirname, '');
   // Keep browser calls same-origin during development; Vite proxies them to
   // the configured API target and avoids cross-origin browser CORS failures.
-  const target = frontendEnv.VITE_DEV_API_PROXY_TARGET || `http://127.0.0.1:${backendEnv.PORT || '4000'}`;
+  const target = frontendEnv.VITE_DEV_API_PROXY_TARGET || `http://127.0.0.1:${backendEnv.PORT || '3001'}`;
   const appVersion = backendEnv.VITE_APP_VERSION || backendEnv.APP_VERSION || '';
 
   // Automatically sync package.json version with backend .env
@@ -52,7 +53,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: '0.0.0.0',
-      port: 4002,
+      port: 4000,
       strictPort: true,
       proxy: {
         '/api': {

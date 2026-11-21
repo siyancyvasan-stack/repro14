@@ -63,6 +63,12 @@ const blankForm: ShopForm = {
 const phoneRegex = /^\+?[0-9][0-9\s()-]{6,19}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const optional = (v: string) => v.trim() || undefined;
+const normalizeCoordinate = (value: string, kind: "latitude" | "longitude") => {
+  const raw = value.trim();
+  if (!/^\d{5,6}$/.test(raw)) return raw;
+  const splitAt = kind === "latitude" ? 1 : 2;
+  return `${raw.slice(0, splitAt)}.${raw.slice(splitAt)}`;
+};
 
 export const ShopCreatePage: React.FC = () => {
   const navigate = useNavigate();
@@ -89,39 +95,39 @@ export const ShopCreatePage: React.FC = () => {
       setErrors((prev) => ({ ...prev, [k]: undefined, form: undefined }));
     };
 
-  const validate = () => {
+  const validate = (candidate: ShopForm = form) => {
     const errs: typeof errors = {};
     (["name", "ownerName", "phone", "address", "city"] as const).forEach(
       (k) => {
-        if (!form[k].trim()) errs[k] = "This field is required.";
+        if (!candidate[k].trim()) errs[k] = "This field is required.";
       },
     );
 
-    if (form.phone && !phoneRegex.test(form.phone)) {
+    if (candidate.phone && !phoneRegex.test(candidate.phone)) {
       errs.phone = "Enter a valid mobile number.";
     }
-    if (form.alternateMobile && !phoneRegex.test(form.alternateMobile)) {
+    if (candidate.alternateMobile && !phoneRegex.test(candidate.alternateMobile)) {
       errs.alternateMobile = "Enter a valid alternate mobile number.";
     }
-    if (form.email && !emailRegex.test(form.email)) {
+    if (candidate.email && !emailRegex.test(candidate.email)) {
       errs.email = "Enter a valid email address.";
     }
-    if (!!form.latitude !== !!form.longitude) {
+    if (!!candidate.latitude !== !!candidate.longitude) {
       errs.latitude = "Enter both latitude and longitude.";
     }
     if (
-      form.latitude &&
-      (Number(form.latitude) < -90 || Number(form.latitude) > 90)
+      candidate.latitude &&
+      (Number(candidate.latitude) < -90 || Number(candidate.latitude) > 90)
     ) {
       errs.latitude = "Latitude must be between -90 and 90.";
     }
     if (
-      form.longitude &&
-      (Number(form.longitude) < -180 || Number(form.longitude) > 180)
+      candidate.longitude &&
+      (Number(candidate.longitude) < -180 || Number(candidate.longitude) > 180)
     ) {
       errs.longitude = "Longitude must be between -180 and 180.";
     }
-    if (form.creditLimitLkr && Number(form.creditLimitLkr) < 0) {
+    if (candidate.creditLimitLkr && Number(candidate.creditLimitLkr) < 0) {
       errs.creditLimitLkr = "Credit limit cannot be negative.";
     }
 
@@ -161,7 +167,21 @@ export const ShopCreatePage: React.FC = () => {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    const candidate = {
+      ...form,
+      latitude: normalizeCoordinate(form.latitude, "latitude"),
+      longitude: normalizeCoordinate(form.longitude, "longitude"),
+    };
+    setForm(candidate);
+    if (!validate(candidate)) {
+      showToast(
+        "Missing shop details",
+        "Please complete the highlighted required fields before registering.",
+        "error",
+      );
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
 
     setSaving(true);
     setErrors({});

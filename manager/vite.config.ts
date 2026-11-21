@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   // The shared API lives under sales/backend in this monorepo.
   const backendEnv = loadEnv(mode, path.resolve(__dirname, '../sales/backend'), '');
   const port = Number(backendEnv.MANAGER_PORT || '4001');
-  const target = `http://127.0.0.1:${backendEnv.PORT || '4000'}`;
+  const target = `http://127.0.0.1:${backendEnv.PORT || '3001'}`;
   const appVersion = backendEnv.VITE_APP_VERSION || backendEnv.APP_VERSION || '';
 
   // Automatically sync package.json version with backend .env
