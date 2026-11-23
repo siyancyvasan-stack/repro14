@@ -32,7 +32,7 @@ module.exports = ({ config }) => ({
   userInterfaceStyle: 'automatic',
   ios: {
     supportsTablet: true,
-    bundleIdentifier: 'com.reproutes.mobile',
+    bundleIdentifier: 'com.reproutes.app',
     infoPlist: {
       NSLocationWhenInUseUsageDescription: 'repRoutes uses your location to record sales visits and routes during an active shift.',
       NSLocationAlwaysAndWhenInUseUsageDescription: 'repRoutes records your route in the background only while your work shift is active.',
@@ -41,7 +41,7 @@ module.exports = ({ config }) => ({
     },
   },
   android: {
-    package: 'com.reproutes.mobile',
+    package: 'com.reproutes.app',
     usesCleartextTraffic: !productionBuild,
     permissions: [
       'ACCESS_COARSE_LOCATION',
