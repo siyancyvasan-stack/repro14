@@ -33,6 +33,8 @@ const handoffLimiter = distributedRateLimit('auth-webview-handoff', { windowMs: 
 authRouter.post('/login', loginLimiter, validate(loginSchema), controller.login);
 authRouter.post('/password-reset/request', loginLimiter, validate(requestPasswordResetSchema), controller.requestPasswordReset);
 authRouter.post('/password-reset/confirm', loginLimiter, validate(resetPasswordSchema), controller.resetPassword);
+authRouter.post('/account-deletion/request', loginLimiter, controller.requestAccountDeletion);
+authRouter.post('/account-deletion/confirm', loginLimiter, controller.confirmAccountDeletion);
 authRouter.post(['/register/request-otp', '/register/verify-otp'], (_req, res) => {
     res.status(403).json({
         error: {

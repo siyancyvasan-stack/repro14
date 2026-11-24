@@ -45,3 +45,12 @@ export const sendPasswordReset = async (email, name, resetUrl) => {
           <p style="font-size:13px;color:#94a3b8">If you did not request a password reset, you can safely ignore this email.</p></div>`,
     });
 };
+export const sendAccountDeletionVerification = async (email, name, confirmUrl) => {
+    await getTransport().sendMail({
+        from: env.SMTP_FROM,
+        to: email,
+        subject: 'Confirm your Reproutes account deletion',
+        text: `Hello ${name}, confirm your Reproutes account deletion here: ${confirmUrl}\nThis link expires in 15 minutes. If you did not request deletion, ignore this email.`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:28px;background:#07111f;color:#e2e8f0;border-radius:18px"><h1 style="margin:0;color:#22d3ee;font-size:24px">Reproutes</h1><p style="margin-top:24px">Hello ${name},</p><p>We received a request to delete your account. Confirm it using the one-time link below. It expires in 15 minutes.</p><p style="margin:24px 0"><a href="${confirmUrl}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:#e11d48;color:#fff;font-weight:700;text-decoration:none">Confirm account deletion</a></p><p style="font-size:13px;color:#94a3b8">If you did not request this, ignore this email and your account will remain active.</p></div>`,
+    });
+};

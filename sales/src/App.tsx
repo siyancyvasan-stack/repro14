@@ -23,6 +23,8 @@ const AgentFuelPage = lazy(() => import('./pages/AgentFuelPage').then((module) =
 const OperationsChatPage = lazy(() => import('./pages/OperationsChatPage').then((module) => ({ default: module.OperationsChatPage })));
 const SafetyPage = lazy(() => import('./pages/SafetyPage').then((module) => ({ default: module.SafetyPage })));
 const AgentContactsPage = lazy(() => import('./pages/ContactsPage').then((module) => ({ default: module.AgentContactsPage })));
+const PublicLegalPage = lazy(() => import('./pages/PublicLegalPage').then((module) => ({ default: module.PublicLegalPage })));
+const DeleteAccountPage = lazy(() => import('./pages/DeleteAccountPage').then((module) => ({ default: module.DeleteAccountPage })));
 
 const LoadingPortal = () => (
   <div className="min-h-[100dvh] grid place-items-center bg-slate-950 text-sm font-semibold text-cyan-300">
@@ -55,6 +57,9 @@ export default function App() {
                 <Route path="/" element={<Navigate to="/sales/login" replace />} />
                 <Route path="/login" element={<Navigate to="/sales/login" replace />} />
                 <Route path="/sales/login" element={<LoginPage portal="sales" />} />
+                <Route path="/privacy-policy" element={<PublicLegalPage kind="privacy" />} />
+                <Route path="/terms-of-service" element={<PublicLegalPage kind="terms" />} />
+                <Route path="/delete-account" element={<DeleteAccountPage />} />
                 <Route path="/mobile/session" element={<MobileSessionPage />} />
 
                 <Route path="/sales/dashboard" element={agentRoute(<AgentDashboardPage />)} />

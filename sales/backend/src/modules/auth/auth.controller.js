@@ -4,8 +4,8 @@ import { AppError } from '../../middleware/errorHandler.js';
 import { createDeviceSession, closeDeviceSessions, touchDeviceSession, } from '../../lib/deviceSession.js';
 import { createRefreshToken, hashToken } from '../../lib/jwt.js';
 import db from '../../lib/db.js';
-import { hashPassword } from '../../lib/password.js';
-import { sendPasswordReset } from '../../lib/email.js';
+import { hashPassword, verifyPassword } from '../../lib/password.js';
+import { sendAccountDeletionVerification, sendPasswordReset } from '../../lib/email.js';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 const WEBVIEW_HANDOFF_TTL_MS = 60_000;
@@ -188,6 +188,45 @@ export const updateMe = async (req, res) => {
     await db.query(`UPDATE User SET ${fields.join(', ')} WHERE id = ? AND tenantId = ?`, values);
     const [users] = await db.query('SELECT id, email, name, role, avatarUrl, employeeCode, phone, region, tenantId FROM User WHERE id = ? AND tenantId = ?', [req.auth.sub, req.auth.tenantId]);
     return res.json({ user: users[0] });
+};
+export const requestAccountDeletion = async (req, res) => {
+    const input = z.object({ email: z.string().email().transform((value) => value.toLowerCase()), password: z.string().min(8).max(128), tenant: z.string().min(2).default('reproutes') }).strict().parse(req.body);
+    const [users] = await db.query('SELECT u.id, u.tenantId, u.email, u.name, u.passwordHash FROM User u JOIN Tenant t ON t.id = u.tenantId WHERE u.email = ? AND t.slug = ? AND u.status = ? LIMIT 1', [input.email, input.tenant, 'ACTIVE']);
+    const user = users[0];
+    if (!user || !(await verifyPassword(input.password, user.passwordHash))) throw new AppError(401, 'IDENTITY_VERIFICATION_FAILED', 'Email or password is incorrect.');
+    const token = createRefreshToken();
+    const expiresAt = new Date(Date.now() + 15 * 60_000);
+    await db.query('UPDATE EmailVerification SET consumedAt = NOW() WHERE email = ? AND tenantSlug = ? AND purpose = ? AND consumedAt IS NULL', [input.email, input.tenant, 'ACCOUNT_DELETION']);
+    await db.query('INSERT INTO EmailVerification (id, email, tenantSlug, purpose, codeHash, payload, expiresAt) VALUES (?, ?, ?, ?, ?, ?, ?)', [randomUUID(), input.email, input.tenant, 'ACCOUNT_DELETION', hashToken(token), JSON.stringify({ userId: user.id }), expiresAt]);
+    const confirmUrl = new URL('/delete-account', env.WEBAUTHN_ORIGIN);
+    confirmUrl.searchParams.set('email', input.email); confirmUrl.searchParams.set('token', token);
+    try { await sendAccountDeletionVerification(input.email, user.name, confirmUrl.toString()); }
+    catch (error) { await db.query('UPDATE EmailVerification SET consumedAt = NOW() WHERE email = ? AND tenantSlug = ? AND purpose = ? AND codeHash = ?', [input.email, input.tenant, 'ACCOUNT_DELETION', hashToken(token)]).catch(() => undefined); throw error; }
+    return res.status(202).json({ message: 'A verification link was sent to your email. It expires in 15 minutes.' });
+};
+export const confirmAccountDeletion = async (req, res) => {
+    const input = z.object({ email: z.string().email().transform((value) => value.toLowerCase()), token: z.string().min(32).max(512), tenant: z.string().min(2).default('reproutes') }).strict().parse(req.body);
+    const [requests] = await db.query('SELECT e.*, u.id as userId, u.tenantId FROM EmailVerification e JOIN User u ON u.id = JSON_UNQUOTE(JSON_EXTRACT(e.payload, "$.userId")) WHERE e.email = ? AND e.tenantSlug = ? AND e.purpose = ? AND e.codeHash = ? AND e.consumedAt IS NULL AND e.expiresAt > NOW() ORDER BY e.createdAt DESC LIMIT 1', [input.email, input.tenant, 'ACCOUNT_DELETION', hashToken(input.token)]);
+    const request = requests[0];
+    if (!request) throw new AppError(400, 'ACCOUNT_DELETION_INVALID', 'This deletion link is invalid or expired.');
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
+    try {
+        const [consumed] = await connection.query('UPDATE EmailVerification SET consumedAt = NOW() WHERE id = ? AND consumedAt IS NULL', [request.id]);
+        if (consumed.affectedRows !== 1) throw new AppError(409, 'ACCOUNT_DELETION_USED', 'This deletion link has already been used.');
+        const deletedEmail = `deleted+${request.userId}@invalid.reproutes`;
+        await connection.query('DELETE FROM LocationPing WHERE agentId = ?', [request.userId]);
+        await connection.query('UPDATE Attendance SET checkInLat = NULL, checkInLng = NULL, checkOutLat = NULL, checkOutLng = NULL, checkInAccuracy = NULL, checkOutAccuracy = NULL, gpsCoverage = NULL WHERE agentId = ?', [request.userId]);
+        await connection.query('UPDATE AgentProfile SET status = ?, shiftActive = ?, trackingState = ?, latitude = NULL, longitude = NULL, lastLocationAt = NULL, lastHeartbeatAt = NULL WHERE userId = ?', ['OFFLINE', false, 'STOPPED', request.userId]);
+        await connection.query('DELETE FROM BiometricCredential WHERE userId = ?', [request.userId]);
+        await connection.query('DELETE FROM PasskeyChallenge WHERE userId = ?', [request.userId]);
+        await connection.query('UPDATE RefreshToken SET revokedAt = NOW() WHERE userId = ? AND revokedAt IS NULL', [request.userId]);
+        await connection.query('UPDATE User SET status = ?, email = ?, name = ?, passwordHash = ?, employeeCode = NULL, phone = NULL, avatarUrl = NULL, region = NULL, updatedAt = NOW() WHERE id = ?', ['DELETED', deletedEmail, 'Deleted user', await hashPassword(randomUUID()), request.userId]);
+        await connection.query('INSERT INTO AuditLog (tenantId, actorId, action, entity, entityId, ipAddress, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)', [request.tenantId, request.userId, 'ACCOUNT_DELETED', 'User', request.userId, req.ip, JSON.stringify({ retained: 'De-identified operational records may be retained for up to 7 years.' })]);
+        await connection.commit();
+    } catch (error) { await connection.rollback(); throw error; } finally { connection.release(); }
+    res.clearCookie('tf_refresh', cookieOptions);
+    return res.json({ message: 'Your account has been deleted and access has been revoked.' });
 };
 export const createWebViewHandoff = async (req, res) => {
     const code = createRefreshToken();

@@ -192,6 +192,18 @@ orderRouter.post('/', authorize(Role.AGENT, Role.MANAGER, Role.ADMIN), async (re
     res.status(201).json(createdOrder);
 });
 
+orderRouter.patch('/:id', authorize(Role.AGENT, Role.MANAGER, Role.ADMIN), async (req, res) => {
+    const input = z.object({ paymentTerm: z.string().min(2), remarks: z.string().max(1000).optional() }).strict().parse(req.body);
+    const [orders] = await db.query('SELECT id, agentId, status FROM `Order` WHERE id = ? AND tenantId = ? LIMIT 1', [String(req.params.id), req.auth.tenantId]);
+    const order = orders[0];
+    if (!order) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Order not found.' } });
+    if (req.auth.role === Role.AGENT && order.agentId !== req.auth.sub) return res.status(403).json({ error: { code: 'FORBIDDEN' } });
+    if (order.status !== OrderStatus.PENDING) return res.status(409).json({ error: { code: 'ORDER_NOT_EDITABLE', message: 'Only pending orders can be edited.' } });
+    await db.query('UPDATE `Order` SET paymentTerm = ?, remarks = ? WHERE id = ? AND tenantId = ?', [input.paymentTerm, input.remarks ?? null, order.id, req.auth.tenantId]);
+    const [updated] = await db.query('SELECT * FROM `Order` WHERE id = ?', [order.id]);
+    return res.json(updated[0]);
+});
+
 orderRouter.patch('/:id/status', authorize(Role.ADMIN, Role.MANAGER), async (req, res) => {
     const { status } = z.object({ status: z.nativeEnum(OrderStatus) }).parse(req.body);
     const id = String(req.params.id);

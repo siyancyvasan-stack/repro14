@@ -5,22 +5,19 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { PortalWebViewScreen } from '../screens/web/PortalWebViewScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { useAuth } from '../contexts/AuthContext';
-import { FactoryManagerNavigator, ProjectManagerNavigator, SalesPersonNavigator } from './RoleNavigators';
+import { SalesPersonNavigator } from './RoleNavigators';
 
 const Tab = createBottomTabNavigator();
 
 function NativeRoleNavigator() {
-  const { user } = useAuth();
-  if (user?.role === 'factory_manager') return <FactoryManagerNavigator />;
-  if (user?.role === 'agent') return <SalesPersonNavigator />;
-  return <ProjectManagerNavigator />;
+  return <SalesPersonNavigator />;
 }
 
 export function RootNavigator() {
   const { status, user, biometricEnrollmentPending, enrollBiometric, dismissBiometricEnrollment } = useAuth();
   if (status === 'restoring') return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size="large" /></View>;
   if (status === 'signedOut' || !user) return <LoginScreen />;
-  const dashboard = user.role === 'admin' ? <PortalWebViewScreen /> : <NavigationContainer>
+  const dashboard = user.role !== 'agent' ? <PortalWebViewScreen /> : <NavigationContainer>
     <Tab.Navigator screenOptions={{ headerShown: false }}>
       <Tab.Screen name="Portal" component={PortalWebViewScreen} />
       <Tab.Screen name="Native" component={NativeRoleNavigator} />

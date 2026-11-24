@@ -750,6 +750,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ portal }) => {
 
             <div className="text-center">
               <AppVersion portal="sales" className="text-xs font-semibold text-slate-500" />
+              {portal === "sales" && <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] font-semibold text-slate-500"><a href="/privacy-policy" className="hover:text-cyan-500">Privacy Policy</a><a href="/terms-of-service" className="hover:text-cyan-500">Terms</a><a href="/delete-account" className="hover:text-cyan-500">Delete Account</a></div>}
             </div>
           </div>
         </div>
