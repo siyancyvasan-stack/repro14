@@ -33,6 +33,7 @@ export const apiRouter = Router();
 
 apiRouter.get('/config/app-version', async (req, res) => {
     const appVersion = env.APP_VERSION || env.VITE_APP_VERSION || '14';
+    const mobileVersion = env.MOBILE_APP_VERSION || appVersion;
     const managerVersion = env.VITE_MANAGER_APP_VERSION || appVersion;
     const salesVersion = env.VITE_SALES_APP_VERSION || appVersion;
     const factoryVersion = env.VITE_FACTORY_APP_VERSION || appVersion;
@@ -42,13 +43,13 @@ apiRouter.get('/config/app-version', async (req, res) => {
         sales: { version: salesVersion },
         factory: { version: factoryVersion },
         android: {
-            latestVersion: env.LATEST_APP_VERSION_ANDROID || appVersion,
-            minimumRequired: env.MIN_APP_VERSION_ANDROID || appVersion,
+            latestVersion: env.LATEST_APP_VERSION_ANDROID || mobileVersion,
+            minimumRequired: env.MIN_APP_VERSION_ANDROID || mobileVersion,
             updateUrl: env.UPDATE_URL_ANDROID,
         },
         ios: {
-            latestVersion: env.LATEST_APP_VERSION_IOS || appVersion,
-            minimumRequired: env.MIN_APP_VERSION_IOS || appVersion,
+            latestVersion: env.LATEST_APP_VERSION_IOS || mobileVersion,
+            minimumRequired: env.MIN_APP_VERSION_IOS || mobileVersion,
             updateUrl: env.UPDATE_URL_IOS,
         },
         web: {
