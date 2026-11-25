@@ -649,7 +649,8 @@ export const ManagerAgentsPage: React.FC = () => {
               Email Address
             </label>
             <input
-              type="email"
+              type="text"
+              inputMode="email"
               required
               value={newEmail}
               onChange={(e) => {

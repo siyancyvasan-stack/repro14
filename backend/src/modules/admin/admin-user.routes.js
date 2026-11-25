@@ -10,10 +10,11 @@ export const adminUserRouter = Router();
 adminUserRouter.use(authenticate, authorize(Role.ADMIN, Role.MANAGER, Role.FACTORY_MANAGER));
 
 const employeeCode = z.string().regex(/^\d{1,7}$/, 'Agent ID must contain digits only (maximum 7 digits).');
+const agentEmail = z.string().trim().min(1, 'Email address is required.').max(254).transform((value) => value.toLowerCase());
 const role = z.enum([Role.AGENT, Role.FACTORY_MANAGER]);
 const userInput = z.object({
   name: z.string().trim().min(2).max(100),
-  email: z.string().email().transform((value) => value.trim().toLowerCase()),
+  email: agentEmail,
   employeeCode,
   role,
   phone: z.string().trim().max(30).optional().or(z.literal('')),
