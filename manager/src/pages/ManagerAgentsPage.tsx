@@ -91,17 +91,17 @@ export const ManagerAgentsPage: React.FC = () => {
   const [newPhone, setNewPhone] = useState("");
   const [newRoute, setNewRoute] = useState("Route A - Maharagama");
   const [newPassword, setNewPassword] = useState("Agent@123");
-  const [newEmployeeCode, setNewEmployeeCode] = useState("TF-101");
+  const [newEmployeeCode, setNewEmployeeCode] = useState("101");
   const [newVehicleNo, setNewVehicleNo] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [formError, setFormError] = useState("");
 
   const getNextEmployeeCode = (currentAgents: Agent[]) => {
     const highestCode = currentAgents.reduce((highest, agent) => {
-      const match = /^TF-(\d+)$/.exec(agent.employeeCode);
-      return match ? Math.max(highest, Number(match[1])) : highest;
+      const match = /\d+/.exec(agent.employeeCode);
+      return match ? Math.max(highest, Number(match[0])) : highest;
     }, 100);
-    return `TF-${String(highestCode + 1).padStart(3, "0")}`;
+    return String(highestCode + 1).slice(0, 7);
   };
 
   useEffect(() => {
@@ -248,7 +248,7 @@ export const ManagerAgentsPage: React.FC = () => {
     setNewName(agent.name);
     setNewEmail(agent.email);
     setNewPhone(agent.phone ?? "");
-    setNewEmployeeCode(agent.employeeCode);
+    setNewEmployeeCode(agent.employeeCode.replace(/\D/g, '').slice(0, 7));
     setNewVehicleNo(agent.vehicleNo ?? "");
     setNewRoute(agent.routeAssigned ?? "");
     setNewPassword("");
@@ -677,9 +677,12 @@ export const ManagerAgentsPage: React.FC = () => {
               </label>
               <input
                 type="text"
+              inputMode="numeric"
+              maxLength={7}
+              pattern="[0-9]{1,7}"
                 value={newEmployeeCode}
-                onChange={(e) => setNewEmployeeCode(e.target.value)}
-                placeholder="e.g. TF-106"
+              onChange={(e) => setNewEmployeeCode(e.target.value.replace(/\D/g, '').slice(0, 7))}
+              placeholder="e.g. 106"
                 className="w-full px-4 py-2.5 text-xs rounded-xl glass-input"
               />
             </div>
