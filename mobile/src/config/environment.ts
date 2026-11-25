@@ -13,4 +13,5 @@ export const environment = {
   webUrl: extra.webUrl?.trim().replace(/\/$/, '') || apiUrl.replace(/:4001$/, ':4000'),
   tenantSlug: extra.tenantSlug ?? 'reproutes-demo',
   easProjectId: extra.eas?.projectId ?? '',
+  appVersion: Constants.expoConfig?.version ?? '0.0.0',
 };

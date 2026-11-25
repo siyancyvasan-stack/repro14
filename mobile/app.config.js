@@ -1,6 +1,7 @@
 // Expo sets NODE_ENV=production while exporting optimized bundles, including
 // local verification. EAS_BUILD_PROFILE identifies an actual release profile.
 const productionBuild = ['production', 'production-apk'].includes(process.env.EAS_BUILD_PROFILE ?? '');
+const mobilePackage = require('./package.json');
 const productionApiUrl = 'https://api.reproutes.com';
 const productionWebUrl = 'https://reproutes.com';
 const configuredApiUrl = productionBuild
@@ -26,7 +27,7 @@ module.exports = ({ config }) => ({
   name: 'repRoutes',
   // Keep this aligned with the existing EAS projectId below.
   slug: 'tracksale-mobile',
-  version: '1.0.0',
+  version: mobilePackage.version,
   orientation: 'portrait',
   scheme: 'reproutes',
   userInterfaceStyle: 'automatic',

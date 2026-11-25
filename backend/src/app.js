@@ -64,7 +64,7 @@ export const createApp = () => {
         },
         credentials: true,
         methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Authorization', 'Content-Type', 'X-Client-Platform', 'X-CSRF-Token', 'X-Idempotency-Key'],
+        allowedHeaders: ['Authorization', 'Content-Type', 'X-Client-Platform', 'X-App-Platform', 'X-App-Version', 'X-CSRF-Token', 'X-Idempotency-Key'],
         exposedHeaders: ['Content-Disposition', 'Content-Type', 'Retry-After'],
     }));
     app.use(distributedRateLimit('global', {

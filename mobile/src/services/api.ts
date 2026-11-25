@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { environment } from '../config/environment';
 
 const ACCESS_TOKEN_KEY = 'tracksale.accessToken';
@@ -44,7 +45,7 @@ async function refresh() {
   let response: Response;
   try {
     response = await fetch(`${environment.apiUrl}/api/v1/auth/refresh`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Client-Platform': 'mobile' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Client-Platform': 'mobile', 'X-App-Platform': Platform.OS, 'X-App-Version': environment.appVersion },
       body: JSON.stringify({ refreshToken }), signal: controller.signal,
     });
   } catch {
@@ -61,6 +62,8 @@ async function refresh() {
 export async function apiRequest<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set('X-Client-Platform', 'mobile');
+  headers.set('X-App-Platform', Platform.OS);
+  headers.set('X-App-Version', environment.appVersion);
   if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
   const controller = new AbortController();

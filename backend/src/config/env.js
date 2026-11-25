@@ -45,6 +45,7 @@ const schema = z.object({
     SMS_WEBHOOK_URL: z.string().url().or(z.literal('')).default(''),
     SMS_WEBHOOK_TOKEN: z.string().default(''),
     APP_VERSION: z.string().default(''),
+    MOBILE_APP_VERSION: z.string().default(''),
     VITE_APP_VERSION: z.string().default(''),
     VITE_MANAGER_APP_VERSION: z.string().default(''),
     VITE_SALES_APP_VERSION: z.string().default(''),
@@ -64,6 +65,7 @@ if (!parsed.success) {
 }
 
 const targetAppVersion = parsed.data.APP_VERSION || parsed.data.VITE_APP_VERSION || '';
+const mobileAppVersion = parsed.data.MOBILE_APP_VERSION || targetAppVersion;
 
 // Sync package.json version across apps with APP_VERSION from backend .env
 try {
@@ -73,12 +75,16 @@ try {
             new URL('../../../manager/package.json', import.meta.url),
             new URL('../../../sales/package.json', import.meta.url),
             new URL('../../../factory/package.json', import.meta.url),
+            new URL('../../../mobile/package.json', import.meta.url),
         ];
         for (const pkgPath of packagePaths) {
             if (fs.existsSync(pkgPath)) {
                 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-                if (pkg.version !== targetAppVersion) {
-                    pkg.version = targetAppVersion;
+                const desiredVersion = pkgPath.pathname.endsWith('/mobile/package.json')
+                    ? mobileAppVersion
+                    : targetAppVersion;
+                if (desiredVersion && pkg.version !== desiredVersion) {
+                    pkg.version = desiredVersion;
                     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
                 }
             }
@@ -90,6 +96,7 @@ try {
 const normalized = {
     ...parsed.data,
     APP_VERSION: targetAppVersion,
+    MOBILE_APP_VERSION: mobileAppVersion,
     MIN_APP_VERSION_ANDROID: parsed.data.MIN_APP_VERSION_ANDROID || targetAppVersion,
     LATEST_APP_VERSION_ANDROID: parsed.data.LATEST_APP_VERSION_ANDROID || targetAppVersion,
     MIN_APP_VERSION_IOS: parsed.data.MIN_APP_VERSION_IOS || targetAppVersion,
