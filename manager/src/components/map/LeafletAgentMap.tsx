@@ -14,6 +14,7 @@ interface LeafletAgentMapProps {
 }
 
 const hasPosition = (agent: Agent) =>
+  agent.gpsStatus === 'LIVE' &&
   Number.isFinite(agent.coordinates.lat) &&
   Number.isFinite(agent.coordinates.lng) &&
   Math.abs(agent.coordinates.lat) <= 90 &&

@@ -302,6 +302,12 @@ const mergeTelemetry = (
                 lng >= -180 &&
                 lng <= 180 &&
                 !(lat === 0 && lng === 0);
+              // Never promote a low-quality fix to the manager's live marker.
+              // It may remain in the server history for audit, but must not
+              // make an old/weak GPS reading look like a current position.
+              const accurateEnough = telemetry.accuracy == null && telemetry.gpsAccuracyMeters == null
+                ? true
+                : Number(telemetry.gpsAccuracyMeters ?? telemetry.accuracy) <= 100;
               // Punch-in and the profile snapshot can contain coordinates with
               // only lastLocationAt/serverReceivedAt. Treat those as valid
               // location timestamps; otherwise the map silently keeps NaN.
@@ -332,7 +338,7 @@ const mergeTelemetry = (
 
               const merged: Agent = {
                 ...agent,
-                ...(hasCoordinates && (isNewerLocation || !isValidAgentCoordinate(agent.coordinates))
+                ...(hasCoordinates && accurateEnough && (isNewerLocation || !isValidAgentCoordinate(agent.coordinates))
                   ? { coordinates: { lat, lng } }
                   : {}),
                 ...(telemetry.heading !== undefined ? { heading: telemetry.heading } : {}),

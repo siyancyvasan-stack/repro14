@@ -237,6 +237,11 @@ export const persistTelemetryPoint = async (actor, payload, io) => {
         'INSERT INTO LocationPing (id, tenantId, agentId, attendanceId, clientPointId, latitude, longitude, accuracy, heading, speedKmH, altitude, battery, shiftStatus, segmentDistanceMeters, retainedForDistance, distanceExclusionReason, deviceRecordedAt, recordedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [pingId, actor.tenantId, actor.sub, attendance.id, clientPointId, parsed.data.latitude, parsed.data.longitude, parsed.data.accuracy, parsed.data.heading, parsed.data.speedKmH, parsed.data.altitude, parsed.data.battery, profile.status === 'ON_BREAK' ? 'ON_BREAK' : 'WORKING', retainedForDistance ? segment : 0, retainedForDistance, poorAccuracy ? 'POOR_ACCURACY' : implausibleSpeed ? 'IMPLAUSIBLE_SPEED' : duplicateMovement ? 'DUPLICATE_OR_NOISE' : null, capturedAt, receivedAt]
     );
+
+    // Keep the raw point for audit/coverage, but never publish a weak or
+    // physically impossible fix as the agent's current live location.
+    if (poorAccuracy || implausibleSpeed)
+        return { ok: true, clientPointId, ignoredForLive: true, capturedAt: capturedAt.toISOString(), serverReceivedAt: receivedAt.toISOString() };
     
     const isNewest = !profile.lastLocationAt || capturedAt >= new Date(profile.lastLocationAt);
     
