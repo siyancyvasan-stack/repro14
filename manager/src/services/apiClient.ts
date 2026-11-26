@@ -17,6 +17,11 @@ const resolveApiUrl = () => {
   return import.meta.env.PROD ? 'https://api.reproutes.com' : '';
 };
 const API_URL = resolveApiUrl();
+export const resolveApiAssetUrl = (url?: string | null) => {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${API_URL}${url.startsWith('/') ? url : `/${url}`}`;
+};
 let accessToken: string | null = null;
 let refreshPromise: Promise<boolean> | null = null;
 let refreshRetryAfter = 0;

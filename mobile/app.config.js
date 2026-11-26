@@ -24,8 +24,9 @@ if (productionBuild && (!apiUrl.startsWith('https://') || /(?:localhost|127\.0\.
 
 module.exports = ({ config }) => ({
   ...config,
-  name: 'repRoutes',
-  // Keep this aligned with the existing EAS projectId below.
+  name: 'Reproutes',
+  owner: 'cict251019s-team',
+  // Keep the existing EAS project slug; the visible app name is Reproutes.
   slug: 'tracksale-mobile',
   version: mobilePackage.version,
   orientation: 'portrait',
@@ -35,8 +36,8 @@ module.exports = ({ config }) => ({
     supportsTablet: true,
     bundleIdentifier: 'com.reproutes.app',
     infoPlist: {
-      NSLocationWhenInUseUsageDescription: 'repRoutes uses your location to record sales visits and routes during an active shift.',
-      NSLocationAlwaysAndWhenInUseUsageDescription: 'repRoutes records your route in the background only while your work shift is active.',
+      NSLocationWhenInUseUsageDescription: 'Reproutes uses your location to record sales visits and routes during an active shift.',
+      NSLocationAlwaysAndWhenInUseUsageDescription: 'Reproutes records your route in the background only while your work shift is active.',
       NSFaceIDUsageDescription: 'Use Face ID to confirm secure repRoutes actions.',
       UIBackgroundModes: ['location', 'remote-notification'],
     },
@@ -53,6 +54,7 @@ module.exports = ({ config }) => ({
       'POST_NOTIFICATIONS',
     ],
   },
+  icon: './assets/reproutes-logo.png',
   plugins: [
     'expo-dev-client',
     'expo-secure-store',
@@ -73,9 +75,8 @@ module.exports = ({ config }) => ({
       : process.env.EXPO_PUBLIC_WEB_URL?.trim().replace(/\/$/, '') || apiUrl.replace(/:4001$/, ':4000'),
     tenantSlug: productionBuild ? 'reproutes' : process.env.EXPO_PUBLIC_TENANT_SLUG ?? 'reproutes-demo',
     // EAS project IDs belong to the Expo account that owns the build.
-    // Do not hard-code a project from another account.
     eas: {
-      projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID || '7de64d62-0a3e-4c11-b4c7-2b1ab119e019',
+      projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID || '8241fd3d-bcbd-4cbc-b2a0-25158e5193cf',
     },
   },
 });

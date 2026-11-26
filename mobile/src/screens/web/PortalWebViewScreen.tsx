@@ -61,7 +61,7 @@ export function PortalWebViewScreen() {
           const message = JSON.parse(event.nativeEvent.data) as { type?: string };
           if (message.type === 'SIGNED_OUT' || message.type === 'SESSION_EXPIRED') void signOut();
           if (message.type === 'HANDOFF_FAILED') setError('Secure portal sign-in failed. Tap retry to create a new session.');
-        } catch { /* Ignore messages not owned by the TrackSale bridge. */ }
+        } catch { /* Ignore messages not owned by the Reproutes bridge. */ }
       }}
       onNavigationStateChange={onNavigation}
       onLoadStart={() => { setLoading(true); setError(''); }}
@@ -70,7 +70,7 @@ export function PortalWebViewScreen() {
       style={styles.web}
     /> : null}
     {loading ? <View style={styles.overlay}><ActivityIndicator size="large" color="#06b6d4"/><Text style={styles.loading}>Loading Reproutes portal…</Text></View> : null}
-    {error ? <View style={styles.error}><Text style={styles.errorTitle}>Unable to open TrackSale</Text><Text style={styles.errorText}>{error}</Text><Text style={styles.hint}>Check your internet connection and hosted service status.</Text><Pressable style={styles.retry} onPress={() => void openPortal()}><Text style={styles.retryText}>Retry</Text></Pressable></View> : null}
+    {error ? <View style={styles.error}><Text style={styles.errorTitle}>Unable to open Reproutes</Text><Text style={styles.errorText}>{error}</Text><Text style={styles.hint}>Check your internet connection and hosted service status.</Text><Pressable style={styles.retry} onPress={() => void openPortal()}><Text style={styles.retryText}>Retry</Text></Pressable></View> : null}
   </SafeAreaView>;
 }
 

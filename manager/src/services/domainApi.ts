@@ -1,5 +1,5 @@
 import { Agent, AttendanceRecord, KpiSummary, Order, Product, Shop } from '../types';
-import { apiRequest, isBackendConfigured } from './apiClient';
+import { apiRequest, isBackendConfigured, resolveApiAssetUrl } from './apiClient';
 import { enqueueFieldOperation } from './fieldOperationQueue';
 
 type Page<T> = { items: T[]; pagination: { page: number; limit: number; total: number } };
@@ -174,7 +174,7 @@ export const loadProducts = async (fallback: Product[] = []) => {
     pricePerCaseLkr: Number(item.pricePerCaseLkr), unitsPerCase: item.unitsPerCase,
     unitPriceLkr: Number(item.pricePerCaseLkr) / Math.max(item.unitsPerCase, 1),
     stockCases: item.stockCases,
-    image: item.imageUrl ?? fallback.find((product) => product.sku === item.sku)?.image ?? '',
+    image: resolveApiAssetUrl(item.imageUrl ?? fallback.find((product) => product.sku === item.sku)?.image),
     active: item.active,
   }));
 };
@@ -188,7 +188,7 @@ const toProduct = (item: any): Product => ({
   unitsPerCase: item.unitsPerCase,
   unitPriceLkr: Number(item.pricePerCaseLkr) / Math.max(item.unitsPerCase, 1),
   stockCases: item.stockCases,
-  image: item.imageUrl ?? '',
+  image: resolveApiAssetUrl(item.imageUrl),
   active: item.active,
 });
 
@@ -206,6 +206,7 @@ export const createProduct = async (input: {
 }));
 
 export const updateProduct = async (id: string, input: Parameters<typeof createProduct>[0]) => toProduct(await apiRequest<any>(`/api/v1/products/${id}`, { method: 'PATCH', body: JSON.stringify(input) }));
+export const deleteProduct = (id: string) => apiRequest<void>(`/api/v1/products/${id}`, { method: 'DELETE' });
 
 const toShop = (item: any): Shop => ({
   id: item.id,
@@ -226,8 +227,8 @@ const toShop = (item: any): Shop => ({
   visitedToday: Boolean(item.lastVisitAt && new Date(item.lastVisitAt).toDateString() === new Date().toDateString()),
   outstandingBalanceLkr: Number(item.outstandingBalanceLkr),
   paymentTerms: item.paymentTerms ?? undefined,
-  images: item.images ?? [],
-  primaryImageUrl: item.images?.find((image: any) => image.isPrimary)?.url ?? item.images?.[0]?.url,
+  images: (item.images ?? []).map((image: any) => ({ ...image, url: resolveApiAssetUrl(image.url) })),
+  primaryImageUrl: resolveApiAssetUrl(item.images?.find((image: any) => image.isPrimary)?.url ?? item.images?.[0]?.url),
 });
 
 export const loadShops = async (fallback: Shop[] = []) => {
@@ -261,7 +262,8 @@ export const deleteProductImage = (productId: string) => apiRequest<void>(`/api/
 
 export const uploadShopImage = async (shopId: string, file: File, type: 'FRONT'|'INTERIOR'|'DISPLAY_RACK', isPrimary = false) => {
   const body = new FormData(); body.append('image', file); body.append('type', type); body.append('isPrimary', String(isPrimary));
-  return apiRequest<any>(`/api/v1/shops/${shopId}/images`, { method: 'POST', body });
+  const image = await apiRequest<any>(`/api/v1/shops/${shopId}/images`, { method: 'POST', body });
+  return { ...image, url: resolveApiAssetUrl(image.url) };
 };
 
 export const loadOrders = async (fallback: Order[] = []) => {

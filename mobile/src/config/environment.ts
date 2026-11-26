@@ -5,7 +5,7 @@ const extra = (Constants.expoConfig?.extra ?? {}) as Extra;
 const apiUrl = extra.apiUrl?.trim().replace(/\/$/, '');
 
 if (!apiUrl) {
-  throw new Error('TrackSale mobile API URL is not configured. Set EXPO_PUBLIC_API_URL before starting the app.');
+  throw new Error('Reproutes mobile API URL is not configured. Set EXPO_PUBLIC_API_URL before starting the app.');
 }
 
 export const environment = {

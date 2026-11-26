@@ -87,6 +87,19 @@ productRouter.patch('/:id', authorize(Role.ADMIN, Role.MANAGER), async (req, res
     return res.json(updated[0]);
 });
 
+// Products can be referenced by historical orders, so manager deletion is a
+// safe archive rather than a destructive row delete.
+productRouter.delete('/:id', authorize(Role.ADMIN, Role.MANAGER), async (req, res) => {
+    const id = String(req.params.id);
+    const [result] = await db.query(
+        'UPDATE Product SET active = ? WHERE id = ? AND tenantId = ?',
+        [false, id, req.auth.tenantId]
+    );
+    if (result.affectedRows === 0)
+        return res.status(404).json({ error: { code: 'NOT_FOUND' } });
+    return res.status(204).end();
+});
+
 productRouter.post('/:id/image', authorize(Role.ADMIN, Role.MANAGER, Role.FACTORY_MANAGER), imageUpload.single('image'), async (req, res) => {
     if (!req.file)
         return res.status(422).json({ error: { code: 'IMAGE_REQUIRED', message: 'Choose an image to upload' } });

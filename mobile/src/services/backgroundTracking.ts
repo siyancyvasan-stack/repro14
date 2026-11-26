@@ -92,6 +92,8 @@ const handleLocations = async (locations: Location.LocationObject[]) => {
   initializeDatabase();
   const userId = await SecureStore.getItemAsync(TRACKING_USER_KEY);
   if (!userId) return;
+  // Connect before publishing so the first fix is live as well as queued.
+  ensureSocket();
   const battery = await batteryPercent();
   for (const location of locations) {
     const capturedAt = new Date(location.timestamp).toISOString();
@@ -105,7 +107,6 @@ const handleLocations = async (locations: Location.LocationObject[]) => {
     queueGpsPoint({ clientPointId, userId, payload, capturedAt, attemptCount: 0, nextAttemptAt: capturedAt });
     if (socket?.connected) socket.emit('tracking:update', payload);
   }
-  ensureSocket();
   await flushGpsOutbox(userId);
   await sendTrackingHeartbeat(locations.at(-1) ? new Date(locations.at(-1)!.timestamp).toISOString() : undefined).catch(() => undefined);
 };
@@ -137,16 +138,18 @@ export async function startBackgroundTracking(userId: string) {
   }
   if (!await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK)) {
     await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
-      accuracy: Location.Accuracy.Highest,
-      timeInterval: 30_000,
-      distanceInterval: 0,
-      deferredUpdatesInterval: 30_000,
-      deferredUpdatesDistance: 25,
+      accuracy: Location.Accuracy.BestForNavigation,
+      // 5 seconds while moving; distance filtering prevents noisy stationary
+      // fixes from flooding the API. Android may batch under OS power rules.
+      timeInterval: 5_000,
+      distanceInterval: 5,
+      deferredUpdatesInterval: 5_000,
+      deferredUpdatesDistance: 5,
       pausesUpdatesAutomatically: false,
       showsBackgroundLocationIndicator: true,
       activityType: Location.ActivityType.AutomotiveNavigation,
       foregroundService: Platform.OS === 'android' ? {
-        notificationTitle: 'TrackSale shift tracking active',
+        notificationTitle: 'Reproutes live tracking active',
         notificationBody: 'Your route is being recorded for the active work shift.',
         notificationColor: '#2563eb',
         killServiceOnDestroy: false,

@@ -51,7 +51,7 @@ export function MobileSessionPage() {
   return (
     <main className="min-h-[100dvh] grid place-items-center bg-slate-950 px-6 text-center text-white">
       <div>
-        <h1 className="text-2xl font-extrabold">Opening TrackSale…</h1>
+        <h1 className="text-2xl font-extrabold">Opening Reproutes…</h1>
         <p
           className={`mt-3 text-sm ${error ? "text-rose-300" : "text-slate-400"}`}
         >

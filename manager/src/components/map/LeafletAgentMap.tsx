@@ -9,6 +9,8 @@ interface LeafletAgentMapProps {
   agents: Agent[];
   selectedAgentId?: string | null;
   onSelectAgent?: (agent: Agent) => void;
+  /** Follow the selected agent as fresh GPS fixes arrive. */
+  followSelectedAgent?: boolean;
 }
 
 const hasPosition = (agent: Agent) =>
@@ -83,7 +85,7 @@ const createAgentPopup = (
   return popup;
 };
 
-export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: LeafletAgentMapProps) => {
+export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent, followSelectedAgent = true }: LeafletAgentMapProps) => {
   const elementRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map>();
   const markersRef = useRef(new Map<string, L.Marker>());
@@ -171,12 +173,13 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
     positionedAgents.forEach((agent) => {
       const selected = agent.id === selectedAgentId;
       const color = statusColor(agent, selected);
+      const heading = Number.isFinite(agent.heading) ? Number(agent.heading) : 0;
       const icon = L.divIcon({
         className: '',
-        html: `<button class="tf-leaflet-agent ${selected ? 'is-selected' : ''}" style="--agent-color:${color}" aria-label="${agent.name}">
+        html: `<button class="tf-leaflet-agent ${selected ? 'is-selected' : ''}" style="--agent-color:${color};transform:rotate(${heading}deg)" aria-label="${agent.name}">
           <span class="tf-leaflet-pulse"></span>
-          <strong>${agent.name.slice(0, 1).toUpperCase()}</strong>
-          <small>${agent.name}</small>
+          <strong style="transform:rotate(${-heading}deg)">${agent.name.slice(0, 1).toUpperCase()}</strong>
+          <small style="transform:rotate(${-heading}deg)">${agent.name}</small>
         </button>`,
         iconSize: [44, 44],
         iconAnchor: [22, 22],
@@ -199,13 +202,20 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
           previous &&
           (previous.lat !== agent.coordinates.lat || previous.lng !== agent.coordinates.lng)
         ) {
+          // Start from the marker's actual interpolated position so a new real
+          // GPS fix never snaps back to the previous target.
+          const start = marker.getLatLng();
           const startedAt = performance.now();
+          const updateAge = agent.lastUpdatedAt
+            ? Math.max(0, Date.now() - new Date(agent.lastUpdatedAt).getTime())
+            : 0;
+          const animationDuration = Math.min(4_500, Math.max(350, updateAge || 1_200));
           const animate = (now: number) => {
-            const progress = Math.min(1, (now - startedAt) / 450);
+            const progress = Math.min(1, (now - startedAt) / animationDuration);
             const eased = 1 - Math.pow(1 - progress, 3);
             marker!.setLatLng([
-              previous.lat + (agent.coordinates.lat - previous.lat) * eased,
-              previous.lng + (agent.coordinates.lng - previous.lng) * eased,
+              start.lat + (agent.coordinates.lat - start.lat) * eased,
+              start.lng + (agent.coordinates.lng - start.lng) * eased,
             ]);
             if (progress < 1) {
               markerAnimationsRef.current.set(agent.id, requestAnimationFrame(animate));
@@ -303,7 +313,7 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
       coordinates: selected.coordinates,
     });
     const selectedPosition = L.latLng(selected.coordinates.lat, selected.coordinates.lng);
-    if (!map.getCenter().equals(selectedPosition, 8) || map.getZoom() < 15) {
+    if (followSelectedAgent && (!map.getCenter().equals(selectedPosition, 8) || map.getZoom() < 15)) {
       map.setView(selectedPosition, Math.max(map.getZoom(), 15), { animate: false });
     }
 
@@ -398,7 +408,7 @@ export const LeafletAgentMap = ({ agents, selectedAgentId, onSelectAgent }: Leaf
         }
       });
     return () => routeRequestRef.current?.abort();
-  }, [agents, selectedAgentId]);
+  }, [agents, selectedAgentId, followSelectedAgent]);
 
   useEffect(() => {
     const selected = agents.find((agent) => agent.id === selectedAgentId);

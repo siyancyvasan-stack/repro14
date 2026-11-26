@@ -12,6 +12,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -30,6 +31,7 @@ import {
   isBiometricEnrolled,
 } from '../../services/biometricAuthService';
 import { useAuth } from '../../contexts/AuthContext';
+import reproutesLogo from '../../../assets/reproutes-logo.png';
 
 type Portal = 'manager' | 'sales' | 'factory';
 
@@ -48,17 +50,8 @@ const ROLE_FOR_PORTAL = {
 function Brand() {
   return (
     <View style={s.brand}>
-      <LinearGradient colors={['#fff', '#e0f2fe']} style={s.logo}>
-        <View style={s.pinRing}/>
-        <Text style={s.logoS}>S</Text>
-        <View style={s.bars}>
-          <View style={[s.bar,{height:9}]}/>
-          <View style={[s.bar,{height:17}]}/>
-          <View style={[s.bar,{height:25}]}/>
-        </View>
-        <View style={s.pinTip}/>
-      </LinearGradient>
-      <Text style={s.word}>Sales<Text style={s.purple}>S</Text><Text style={s.blue}>phere</Text></Text>
+      <Image source={reproutesLogo} style={s.logoImage} accessibilityLabel="Reproutes" />
+      <Text style={s.word}>Re<Text style={s.purple}>pr</Text><Text style={s.blue}>outes</Text></Text>
     </View>
   );
 }
@@ -318,7 +311,7 @@ export function LoginScreen() {
 const s = StyleSheet.create({
   flex:{flex:1},safe:{flex:1,backgroundColor:'#f8fafc'},page:{backgroundColor:'#fff'},
   hero:{padding:18,paddingBottom:25},heroHead:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginBottom:16},
-  brand:{flexDirection:'row',alignItems:'center',gap:9},logo:{width:54,height:58,borderRadius:13,alignItems:'center',justifyContent:'center',overflow:'hidden',borderWidth:1,borderColor:'#dbeafe'},pinRing:{position:'absolute',width:38,height:45,borderWidth:4,borderColor:'#111827',borderRadius:20,transform:[{rotate:'20deg'}]},pinTip:{position:'absolute',bottom:1,width:10,height:10,backgroundColor:'#111827',transform:[{rotate:'45deg'}]},logoS:{color:'#9333ea',fontWeight:'900',fontStyle:'italic',fontSize:37,lineHeight:44,zIndex:2},bars:{position:'absolute',zIndex:3,right:8,top:16,flexDirection:'row',alignItems:'flex-end',gap:2},bar:{width:4,borderRadius:2,backgroundColor:'#06b6d4'},word:{color:'#0f172a',fontWeight:'900',fontSize:22},purple:{color:'#a21caf'},blue:{color:'#0ea5e9'},
+  brand:{flexDirection:'row',alignItems:'center',gap:9},logoImage:{width:54,height:54,borderRadius:13},logo:{width:54,height:58,borderRadius:13,alignItems:'center',justifyContent:'center',overflow:'hidden',borderWidth:1,borderColor:'#dbeafe'},pinRing:{position:'absolute',width:38,height:45,borderWidth:4,borderColor:'#111827',borderRadius:20,transform:[{rotate:'20deg'}]},pinTip:{position:'absolute',bottom:1,width:10,height:10,backgroundColor:'#111827',transform:[{rotate:'45deg'}]},logoS:{color:'#9333ea',fontWeight:'900',fontStyle:'italic',fontSize:37,lineHeight:44,zIndex:2},bars:{position:'absolute',zIndex:3,right:8,top:16,flexDirection:'row',alignItems:'flex-end',gap:2},bar:{width:4,borderRadius:2,backgroundColor:'#06b6d4'},word:{color:'#0f172a',fontWeight:'900',fontSize:22},purple:{color:'#a21caf'},blue:{color:'#0ea5e9'},
   intro:{borderWidth:1,borderColor:'#bae6fd',backgroundColor:'#fff',padding:8,borderRadius:11},introText:{color:'#06b6d4',fontSize:9,fontWeight:'900'},
   map:{height:220,borderRadius:24,overflow:'hidden',backgroundColor:'#07182f',borderWidth:1,borderColor:'#155e75',elevation:7},hline:{position:'absolute',left:15,right:15,height:1,backgroundColor:'#164e63',transform:[{rotate:'-5deg'}]},vline:{position:'absolute',top:10,bottom:8,width:1,backgroundColor:'#164e63',transform:[{rotate:'12deg'}]},route:{position:'absolute',left:40,top:113,width:245,height:4,borderRadius:3,backgroundColor:'#22d3ee',transform:[{rotate:'-7deg'}]},dot:{position:'absolute',width:12,height:12,borderRadius:6,borderWidth:3,borderColor:'#e0f2fe',elevation:8},
   stat:{minWidth:100,borderRadius:13,paddingHorizontal:9,paddingVertical:7,backgroundColor:'rgba(30,41,59,.9)',borderWidth:1,borderColor:'#64748b'},statLabel:{color:'#94a3b8',fontSize:7,fontWeight:'900'},statValue:{fontSize:10,fontWeight:'900',marginTop:2},

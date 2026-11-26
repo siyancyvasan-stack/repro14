@@ -10,7 +10,7 @@ export async function registerForPushNotifications() {
   if (!Device.isDevice || !environment.easProjectId) return undefined;
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
-      name: 'TrackSale notifications',
+      name: 'Reproutes notifications',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#2563eb',
