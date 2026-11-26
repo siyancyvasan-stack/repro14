@@ -34,6 +34,17 @@ export function PortalWebViewScreen({ directLogin = false }: { directLogin?: boo
 
   useEffect(() => { void openPortal(); }, [openPortal]);
 
+  // Never leave the APK on an endless spinner when DNS, TLS, the portal, or
+  // the one-time handoff is unavailable on the device network.
+  useEffect(() => {
+    if (!portalUrl || !loading) return;
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setError('Reproutes portal took too long to respond. Check internet access and tap Retry.');
+    }, 15_000);
+    return () => clearTimeout(timeout);
+  }, [portalUrl, loading]);
+
   React.useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
       if (!canGoBack) return false;
@@ -76,6 +87,7 @@ export function PortalWebViewScreen({ directLogin = false }: { directLogin?: boo
       onLoadStart={() => { setLoading(true); setError(''); }}
       onLoadEnd={() => setLoading(false)}
       onError={(event) => { setLoading(false); setError(event.nativeEvent.description || 'Portal unavailable'); }}
+      onHttpError={(event) => { setLoading(false); setError(`Portal request failed (${event.nativeEvent.statusCode}). Tap Retry.`); }}
       style={styles.web}
     /> : null}
     {loading ? <View style={styles.overlay}><ActivityIndicator size="large" color="#06b6d4"/><Text style={styles.loading}>Loading Reproutes portal…</Text></View> : null}
