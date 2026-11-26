@@ -5,10 +5,11 @@ import { WebView } from 'react-native-webview';
 import type { WebViewNavigation } from 'react-native-webview';
 import { environment } from '../../config/environment';
 import { api } from '../../services/api';
+import { reconcileBackgroundTracking } from '../../services/backgroundTracking';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function PortalWebViewScreen({ directLogin = false }: { directLogin?: boolean }) {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const webView = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
   const [canGoBack, setCanGoBack] = useState(false);
@@ -65,6 +66,9 @@ export function PortalWebViewScreen({ directLogin = false }: { directLogin?: boo
         try {
           const message = JSON.parse(event.nativeEvent.data) as { type?: string };
           if (message.type === 'SIGNED_OUT' || message.type === 'SESSION_EXPIRED') void signOut();
+          if ((message.type === 'PUNCH_IN' || message.type === 'PUNCH_OUT') && user?.role === 'agent') {
+            void reconcileBackgroundTracking(user.id, message.type === 'PUNCH_IN');
+          }
           if (message.type === 'HANDOFF_FAILED') setError('Secure portal sign-in failed. Tap retry to create a new session.');
         } catch { /* Ignore messages not owned by the Reproutes bridge. */ }
       }}

@@ -178,6 +178,7 @@ export const AgentDashboardPage: React.FC = () => {
         setDistanceKm(attendance?.distanceKm ?? 0);
         localStorage.setItem("tf_agent_checked_in", String(checkedIn));
         window.dispatchEvent(new Event("reproutes:agent-check-in-changed"));
+        window.ReactNativeWebView?.postMessage(JSON.stringify({ type: "PUNCH_OUT", at: new Date().toISOString() }));
       })
       .catch(() => undefined);
   }, []);
@@ -363,6 +364,7 @@ export const AgentDashboardPage: React.FC = () => {
         setPunchInTime(undefined);
         localStorage.setItem("tf_agent_checked_in", "false");
         window.dispatchEvent(new Event("reproutes:agent-check-in-changed"));
+        window.ReactNativeWebView?.postMessage(JSON.stringify({ type: "PUNCH_IN", at: new Date().toISOString() }));
         trackingLog("check-out", {
           agentId: user.id,
           accuracyMeters: point ? Math.round(point.accuracy) : undefined,
