@@ -1,5 +1,5 @@
 import React, { FormEvent, useEffect, useMemo, useState } from "react";
-import { MapPin, Package, Phone, Plus, Search, Store } from "lucide-react";
+import { MapPin, Package, Pencil, Phone, Plus, Search, Store, Trash2 } from "lucide-react";
 import { GlassCard } from "../components/common/GlassCard";
 import { Modal } from "../components/common/Modal";
 import { ManagerLayout } from "../components/layout/ManagerLayout";
@@ -7,8 +7,10 @@ import { useToast } from "../context/ToastContext";
 import {
   createProduct,
   createShop,
+  deleteProduct,
   loadProducts,
   loadShops,
+  updateProduct,
 } from "../services/domainApi";
 import { Product, Shop } from "../types";
 import { ImageUploadField } from "../components/common/ImageUploadField";
@@ -43,6 +45,7 @@ export const ManagerProductsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<CatalogTab>("products");
   const [searchQuery, setSearchQuery] = useState("");
   const [productModalOpen, setProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [shopModalOpen, setShopModalOpen] = useState(false);
   const [productForm, setProductForm] = useState(emptyProduct);
   const [shopForm, setShopForm] = useState(emptyShop);
@@ -67,7 +70,7 @@ export const ManagerProductsPage: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     const query = searchQuery.toLowerCase();
-    return products.filter((product) =>
+    return products.filter((product) => product.active !== false &&
       [product.name, product.sku, product.category].some((value) =>
         value.toLowerCase().includes(query),
       ),
@@ -83,26 +86,39 @@ export const ManagerProductsPage: React.FC = () => {
     );
   }, [shops, searchQuery]);
 
-  const handleCreateProduct = async (event: FormEvent) => {
+  const openProductEditor = (product?: Product) => {
+    setEditingProduct(product ?? null);
+    setProductForm(product ? {
+      name: product.name, sku: product.sku, category: product.category,
+      pricePerCaseLkr: String(product.pricePerCaseLkr), unitsPerCase: String(product.unitsPerCase), stockCases: String(product.stockCases),
+    } : emptyProduct);
+    setProductImage(undefined);
+    setProductModalOpen(true);
+  };
+
+  const handleSaveProduct = async (event: FormEvent) => {
     event.preventDefault();
     setSaving(true);
     try {
-      let created = await createProduct({
+      const input = {
         name: productForm.name.trim(),
         sku: productForm.sku.trim().toUpperCase(),
         category: productForm.category.trim(),
         pricePerCaseLkr: Number(productForm.pricePerCaseLkr),
         unitsPerCase: Number(productForm.unitsPerCase),
         stockCases: Number(productForm.stockCases),
-      });
+      };
+      let created = editingProduct ? await updateProduct(editingProduct.id, input) : await createProduct(input);
       if (productImage)
         created = await uploadProductImage(created.id, productImage);
-      setProducts((current) => [created, ...current]);
+      setProducts((current) => editingProduct
+        ? current.map((item) => item.id === created.id ? created : item)
+        : [created, ...current]);
       setProductForm(emptyProduct);
       setProductImage(undefined);
       setProductModalOpen(false);
       showToast(
-        "Product Added",
+        editingProduct ? "Product Updated" : "Product Added",
         `${created.name} is now available in the catalog.`,
         "success",
       );
@@ -114,6 +130,17 @@ export const ManagerProductsPage: React.FC = () => {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteProduct = async (product: Product) => {
+    if (!window.confirm(`Archive ${product.name}? Existing orders will be preserved.`)) return;
+    try {
+      await deleteProduct(product.id);
+      setProducts((current) => current.filter((item) => item.id !== product.id));
+      showToast("Product Archived", `${product.name} is no longer available for new orders.`, "success");
+    } catch (error) {
+      showToast("Product Not Archived", error instanceof Error ? error.message : "Please try again.", "error");
     }
   };
 
@@ -201,7 +228,7 @@ export const ManagerProductsPage: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setProductModalOpen(true)}
+            onClick={() => openProductEditor()}
             className="px-4 py-2.5 rounded-xl text-xs font-bold text-white glass-button-primary flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -264,6 +291,7 @@ export const ManagerProductsPage: React.FC = () => {
                       src={product.image}
                       alt={product.name}
                       className="w-16 h-16 rounded-2xl object-cover border border-cyan-500/30 shrink-0"
+                      onError={(event) => { event.currentTarget.style.display = "none"; }}
                     />
                   ) : (
                     <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 grid place-items-center shrink-0">
@@ -302,6 +330,10 @@ export const ManagerProductsPage: React.FC = () => {
                   {product.stockCases} Cases
                 </span>
               </div>
+              <div className="flex justify-end gap-2 border-t border-slate-300/70 pt-3">
+                <button type="button" onClick={() => openProductEditor(product)} className="inline-flex items-center gap-1 rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700 hover:bg-cyan-100"><Pencil className="h-3.5 w-3.5" /> Edit</button>
+                <button type="button" onClick={() => void handleDeleteProduct(product)} className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100"><Trash2 className="h-3.5 w-3.5" /> Delete</button>
+              </div>
             </GlassCard>
           ))}
         </div>
@@ -319,6 +351,7 @@ export const ManagerProductsPage: React.FC = () => {
                     src={shop.primaryImageUrl}
                     alt={`${shop.name} shop front`}
                     className="h-full w-full object-cover"
+                      onError={(event) => { event.currentTarget.style.display = "none"; }}
                   />
                 ) : (
                   <div className="grid h-full place-items-center text-cyan-500">
@@ -382,13 +415,13 @@ export const ManagerProductsPage: React.FC = () => {
       <Modal
         isOpen={productModalOpen}
         onClose={() => setProductModalOpen(false)}
-        title="Add New Product"
+        title={editingProduct ? "Edit Product" : "Add New Product"}
         maxWidth="xl"
         stickyActions
         scrollControls
       >
         <form
-          onSubmit={handleCreateProduct}
+          onSubmit={handleSaveProduct}
           className="agent-form-contrast space-y-4"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -482,7 +515,7 @@ export const ManagerProductsPage: React.FC = () => {
           <FormActions
             saving={saving}
             onCancel={() => setProductModalOpen(false)}
-            submitLabel="Add Product"
+            submitLabel={editingProduct ? "Save Changes" : "Add Product"}
           />
         </form>
       </Modal>
