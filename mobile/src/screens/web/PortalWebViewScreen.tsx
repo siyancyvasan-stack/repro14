@@ -7,7 +7,7 @@ import { environment } from '../../config/environment';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
-export function PortalWebViewScreen() {
+export function PortalWebViewScreen({ directLogin = false }: { directLogin?: boolean }) {
   const { signOut } = useAuth();
   const webView = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
@@ -18,13 +18,18 @@ export function PortalWebViewScreen() {
   const openPortal = useCallback(async () => {
     setLoading(true); setError(''); setPortalUrl('');
     try {
+      if (directLogin) {
+        setPortalUrl(`${environment.webUrl}/sales/login`);
+        setLoading(false);
+        return;
+      }
       const handoff = await api.post<{ code: string }>('/api/v1/auth/webview-handoff', {});
       setPortalUrl(`${environment.webUrl}/mobile/session?code=${encodeURIComponent(handoff.code)}`);
     } catch (reason) {
       setLoading(false);
       setError(reason instanceof Error ? reason.message : 'Unable to create the secure portal session.');
     }
-  }, []);
+  }, [directLogin]);
 
   useEffect(() => { void openPortal(); }, [openPortal]);
 
