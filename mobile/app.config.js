@@ -44,6 +44,10 @@ module.exports = ({ config }) => ({
   },
   android: {
     package: 'com.reproutes.app',
+    adaptiveIcon: {
+      foregroundImage: './assets/reproutes-logo.png',
+      backgroundColor: '#ffffff',
+    },
     usesCleartextTraffic: !productionBuild,
     permissions: [
       'ACCESS_COARSE_LOCATION',
