@@ -63,7 +63,7 @@ export function PortalWebViewScreen({ directLogin = false }: { directLogin?: boo
       // The hosted portal may redirect between reproutes.com and
       // www.reproutes.com during the handoff. Keep navigation restricted to
       // Reproutes domains while allowing that legitimate redirect.
-      originWhitelist={['https://*.reproutes.com/*']}
+      originWhitelist={['https://reproutes.com/*', 'https://*.reproutes.com/*']}
       sharedCookiesEnabled
       thirdPartyCookiesEnabled
       javaScriptEnabled
