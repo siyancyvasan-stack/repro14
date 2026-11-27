@@ -153,7 +153,9 @@ export const useLiveAgentTracking = (initialAgents: Agent[]) => {
       .then(() => {
         if (disposed) return;
         socket = io(socketIoUrl, {
-          transports: ['websocket', 'polling'],
+          // Production reverse proxies may not forward WebSocket upgrades;
+          // start with Socket.IO polling and upgrade when available.
+          transports: ['polling', 'websocket'],
           withCredentials: true,
           auth: (callback) => {
             void ensureAccessToken()

@@ -304,7 +304,11 @@ export const createOrder = async (input: {
 export const updateOrderStatus = (id: string, status: Order['status']) =>
   apiRequest(`/api/v1/orders/${id}/status`, {
     method: 'PATCH',
-    body: JSON.stringify({ status: status.toUpperCase() }),
+    body: JSON.stringify({ status: ({
+      Approved: 'APPROVED', Pending: 'PENDING', 'Production Required': 'PRODUCTION_REQUIRED',
+      'In Production': 'IN_PRODUCTION', 'Quality Check': 'QUALITY_CHECK', Ready: 'READY',
+      Dispatched: 'DISPATCHED', Cancelled: 'CANCELLED', Delivered: 'DELIVERED',
+    } as Record<Order['status'], string>)[status] }),
   });
 
 export const deleteOrder = (id: string) =>
