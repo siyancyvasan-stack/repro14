@@ -3,7 +3,9 @@ export type AndroidApkConfig =
   | { available: false; reason: string };
 
 export const getAndroidApkConfig = (configuredUrl?: string): AndroidApkConfig => {
-  const value = configuredUrl?.trim();
+  const value = configuredUrl?.trim() || (typeof window !== 'undefined'
+    ? new URL('/reproutes.apk', window.location.origin).toString()
+    : '');
   if (!value) {
     return { available: false, reason: 'Android app download is being prepared.' };
   }
