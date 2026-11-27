@@ -55,12 +55,15 @@ export function PortalWebViewScreen({ directLogin = false }: { directLogin?: boo
   }, [canGoBack]);
 
   const onNavigation = (state: WebViewNavigation) => setCanGoBack(state.canGoBack);
-  const portalOrigin = new URL(environment.webUrl).origin;
+  const portalHost = new URL(environment.webUrl).hostname;
   return <SafeAreaView style={styles.safe} edges={['top']}>
     {portalUrl ? <WebView
       ref={webView}
       source={{ uri: portalUrl }}
-      originWhitelist={[`${portalOrigin}/*`]}
+      // The hosted portal may redirect between reproutes.com and
+      // www.reproutes.com during the handoff. Keep navigation restricted to
+      // Reproutes domains while allowing that legitimate redirect.
+      originWhitelist={['https://*.reproutes.com/*']}
       sharedCookiesEnabled
       thirdPartyCookiesEnabled
       javaScriptEnabled
@@ -69,7 +72,10 @@ export function PortalWebViewScreen({ directLogin = false }: { directLogin?: boo
       mediaPlaybackRequiresUserAction={false}
       setSupportMultipleWindows={false}
       onShouldStartLoadWithRequest={(request) => {
-        if (request.url.startsWith(portalOrigin)) return true;
+        try {
+          const target = new URL(request.url);
+          if (target.hostname === portalHost || target.hostname.endsWith('.reproutes.com')) return true;
+        } catch { /* fall through to external-link handling */ }
         if (/^https?:\/\//i.test(request.url)) void Linking.openURL(request.url);
         return false;
       }}
