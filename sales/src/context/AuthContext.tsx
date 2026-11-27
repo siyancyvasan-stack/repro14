@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
-import { ApiError, isBackendConfigured, SESSION_EXPIRED_EVENT, setAccessToken } from '../services/apiClient';
+import { ApiError, getAccessToken, isBackendConfigured, SESSION_EXPIRED_EVENT, setAccessToken } from '../services/apiClient';
 import { loginWithApi, loginWithPasskey, logoutFromApi, restoreApiSession } from '../services/authApi';
 
 declare global {
@@ -30,6 +30,15 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const syncNativeSession = (sessionUser: User) => {
+  const accessToken = getAccessToken();
+  if (accessToken) {
+    window.ReactNativeWebView?.postMessage(JSON.stringify({
+      type: 'AUTHENTICATED', accessToken, user: sessionUser,
+    }));
+  }
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
@@ -104,6 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       setUser(authenticatedUser);
       setAuthState('success');
+      syncNativeSession(authenticatedUser);
       return 'success';
     } catch (error) {
       if (error instanceof ApiError && error.status === 429) {
@@ -152,6 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setUser(authenticatedUser);
     setAuthState('success');
+    syncNativeSession(authenticatedUser);
     return authenticatedUser;
   };
 

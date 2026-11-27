@@ -9,7 +9,7 @@ import { reconcileBackgroundTracking } from '../../services/backgroundTracking';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function PortalWebViewScreen({ directLogin = false }: { directLogin?: boolean }) {
-  const { signOut, user } = useAuth();
+  const { signOut, user, acceptWebSession } = useAuth();
   const webView = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
   const [canGoBack, setCanGoBack] = useState(false);
@@ -81,8 +81,15 @@ export function PortalWebViewScreen({ directLogin = false }: { directLogin?: boo
       }}
       onMessage={(event) => {
         try {
-          const message = JSON.parse(event.nativeEvent.data) as { type?: string };
+          const message = JSON.parse(event.nativeEvent.data) as {
+            type?: string;
+            accessToken?: string;
+            user?: { id: string; email: string; name: string; role: 'admin' | 'manager' | 'factory_manager' | 'agent' };
+          };
           if (message.type === 'SIGNED_OUT' || message.type === 'SESSION_EXPIRED') void signOut();
+          if (message.type === 'AUTHENTICATED' && message.accessToken && message.user) {
+            void acceptWebSession(message.accessToken, message.user);
+          }
           if ((message.type === 'PUNCH_IN' || message.type === 'PUNCH_OUT') && user?.role === 'agent') {
             void reconcileBackgroundTracking(user.id, message.type === 'PUNCH_IN');
           }

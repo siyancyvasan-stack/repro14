@@ -34,6 +34,7 @@ type AuthContextValue = {
   revokeBiometric(): Promise<void>;
   dismissBiometricEnrollment(): Promise<void>;
   signOut(): Promise<void>;
+  acceptWebSession(accessToken: string, user: User): Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -141,6 +142,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
       await authService.logout();
       setUser(null);
       setStatus('signedOut');
+    },
+    acceptWebSession: async (accessToken, authenticatedUser) => {
+      validateRole(authenticatedUser.role);
+      await persistTokens(accessToken);
+      setUser(authenticatedUser);
+      setStatus('signedIn');
     },
   }), [user, status, biometricEnrollmentUserId]);
 
